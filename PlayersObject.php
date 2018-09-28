@@ -29,26 +29,18 @@ interface IWritePlayers {
 }
 
 interface IDisplayPlayers {
-	function display($isCLI, $course, $filename = null);
+	function display($isCLI, $course);
 }
 
 
+# We need to implement single responsiblity for each class. Therefor, PlayersObject is refactored into three seperate classes.
 
-class PlayersObject implements IReadPlayers, IWritePlayers, IDisplayPlayers {
+# Class ReadPlayersObject: Read data from different sources for example, array, json, and file.
 
-    private $playersArray;
 
-    private $playerJsonString;
+class ReadPlayersObject implements IReadPlayers {
 
-    public function __construct() {
-        //We're only using this if we're storing players as an array.
-        $this->playersArray = [];
-
-        //We'll only use this one if we're storing players as a JSON string
-        $this->playerJsonString = null;
-    }
-
-    /**
+ 	/**
      * @param $source string Where we're retrieving the data from. 'json', 'array' or 'file'
      * @param $filename string Only used if we're reading players in 'file' mode.
      * @return string json
@@ -75,36 +67,6 @@ class PlayersObject implements IReadPlayers, IWritePlayers, IDisplayPlayers {
         return $playerData;
 
     }
-
-    /**
-     * @param $source string Where to write the data. 'json', 'array' or 'file'
-     * @param $filename string Only used if we're writing in 'file' mode
-     * @param $player \stdClass Class implementation of the player with name, age, job, salary.
-     */
-    function writePlayer($source, $player, $filename = null) {
-        switch ($source) {
-            case 'array':
-                $this->playersArray[] = $player;
-                break;
-            case 'json':
-                $players = [];
-                if ($this->playerJsonString) {
-                    $players = json_decode($this->playerJsonString);
-                }
-                $players[] = $player;
-                $this->playerJsonString = json_encode($player);
-                break;
-            case 'file':
-                $players = json_decode($this->getPlayerDataFromFile($filename));
-                if (!$players) {
-                    $players = [];
-                }
-                $players[] = $player;
-                file_put_contents($filename, json_encode($players));
-                break;
-        }
-    }
-
 
     function getPlayerDataArray() {
 
@@ -152,13 +114,61 @@ class PlayersObject implements IReadPlayers, IWritePlayers, IDisplayPlayers {
         return $file;
     }
 
-    function display($isCLI, $source, $filename = null) {
+}
 
-        $players = $this->readPlayers($source, $filename);
+
+# Class WritePlayersObject: Write data into different sources for example, array, json, and file.
+
+class WritePlayersObject implements IWritePlayers {
+
+    /**
+     * @param $source string Where to write the data. 'json', 'array' or 'file'
+     * @param $filename string Only used if we're writing in 'file' mode
+     * @param $player \stdClass Class implementation of the player with name, age, job, salary.
+     */
+    function writePlayer($source, $player, $filename = null) {
+
+    	$playersArray = [];
+    	$playerJsonString = null;
+
+        switch ($source) {
+            case 'array':
+                $this->playersArray[] = $player;
+                return $playersArray;
+                break;
+            case 'json':
+                $players = [];
+                if ($this->playerJsonString) {
+                    $players = json_decode($this->playerJsonString);
+                }
+                $players[] = $player;
+                $this->playerJsonString = json_encode($player);
+                return $playerJsonString;
+                break;
+            case 'file':
+                $players = json_decode($this->getPlayerDataFromFile($filename));
+                if (!$players) {
+                    $players = [];
+                }
+                $players[] = $player;
+                file_put_contents($filename, json_encode($players));
+                break;
+        }
+    }
+
+}
+
+
+# Class DisplayPlayersObject: display() function is only for showing data. It does not matter, whether the data is coming from array, json, or a file. 
+
+class DisplayPlayersObject implements IDisplayPlayers {
+
+
+    function display($isCLI, $PlayersData) {
 
         if ($isCLI) {
             echo "Current Players: \n";
-            foreach ($players as $player) {
+            foreach ($PlayersData as $player) {
 
                 echo "\tName: $player->name\n";
                 echo "\tAge: $player->age\n";
@@ -204,8 +214,21 @@ class PlayersObject implements IReadPlayers, IWritePlayers, IDisplayPlayers {
 
 }
 
-$playersObject = new PlayersObject();
 
-$playersObject->display(php_sapi_name() === 'cli', 'array');
+
+$ReadPlayersData = new ReadPlayersObject();
+$ShowPlayersData = new DisplayPlayersObject();
+
+# Reading data from array
+
+$PlayersData = $ReadPlayersData->readPlayers('array');
+$ShowPlayersData->display(php_sapi_name() === 'cli', $PlayersData);
+
+# Reading data from 'playerdata.json' file
+
+$PlayersData = $ReadPlayersData->readPlayers('file', 'playerdata.json');
+$ShowPlayersData->display(php_sapi_name() === 'cli', $PlayersData);
+
+
 
 ?>
