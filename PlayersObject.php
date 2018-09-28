@@ -25,7 +25,7 @@ interface IReadPlayers {
 }
 
 interface IWritePlayers {
-	function writePlayer($source, $player, $filename = null);
+	function writePlayers($source, $player, $filename = null);
 }
 
 interface IDisplayPlayers {
@@ -33,10 +33,8 @@ interface IDisplayPlayers {
 }
 
 
-# We need to implement single responsiblity for each class. Therefor, PlayersObject is refactored into three seperate classes.
-
-# Class ReadPlayersObject: Read data from different sources for example, array, json, and file.
-
+# We need to implement single responsibility for each class. Therefore, PlayersObject is re-factored into three separate classes.
+# Class ReadPlayersObject: Read data from different types of sources; for example, array, json, and file.
 
 class ReadPlayersObject implements IReadPlayers {
 
@@ -117,7 +115,7 @@ class ReadPlayersObject implements IReadPlayers {
 }
 
 
-# Class WritePlayersObject: Write data into different sources for example, array, json, and file.
+# Class WritePlayersObject: Write data into different sources; for example, array, json, and file.
 
 class WritePlayersObject implements IWritePlayers {
 
@@ -126,7 +124,7 @@ class WritePlayersObject implements IWritePlayers {
      * @param $filename string Only used if we're writing in 'file' mode
      * @param $player \stdClass Class implementation of the player with name, age, job, salary.
      */
-    function writePlayer($source, $player, $filename = null) {
+    function writePlayers($source, $player, $filename = null) {
 
     	$playersArray = [];
     	$playerJsonString = null;
@@ -163,7 +161,6 @@ class WritePlayersObject implements IWritePlayers {
 
 class DisplayPlayersObject implements IDisplayPlayers {
 
-
     function display($isCLI, $PlayersData) {
 
         if ($isCLI) {
@@ -175,7 +172,9 @@ class DisplayPlayersObject implements IDisplayPlayers {
                 echo "\tSalary: $player->salary\n";
                 echo "\tJob: $player->job\n\n";
             }
-        } else {
+        } 
+        
+        else {
 
             ?>
             <!DOCTYPE html>
@@ -215,7 +214,6 @@ class DisplayPlayersObject implements IDisplayPlayers {
 }
 
 
-
 $ReadPlayersData = new ReadPlayersObject();
 $ShowPlayersData = new DisplayPlayersObject();
 
@@ -228,7 +226,6 @@ $ShowPlayersData->display(php_sapi_name() === 'cli', $PlayersData);
 
 $PlayersData = $ReadPlayersData->readPlayers('file', 'playerdata.json');
 $ShowPlayersData->display(php_sapi_name() === 'cli', $PlayersData);
-
 
 
 ?>
