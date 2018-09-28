@@ -18,13 +18,23 @@
 */
 
 
-interface IReadWritePlayers {
-    function readPlayers($source, $filename = null);
-    function writePlayer($source, $player, $filename = null);
-    function display($isCLI, $course, $filename = null);
+# To implement 'Interface segregation principle', we are dividing the IReadWritePlayers into multiple smaller interfaces.
+
+interface IReadPlayers {
+	function readPlayers($source, $filename = null);
 }
 
-class PlayersObject implements IReadWritePlayers {
+interface IWritePlayers {
+	function writePlayer($source, $player, $filename = null);
+}
+
+interface IDisplayPlayers {
+	function display($isCLI, $course, $filename = null);
+}
+
+
+
+class PlayersObject implements IReadPlayers, IWritePlayers, IDisplayPlayers {
 
     private $playersArray;
 
